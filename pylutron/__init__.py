@@ -293,6 +293,7 @@ class LutronXmlDbParser(object):
         if device_xml.get('DeviceType') in (
             'HWI_SEETOUCH_KEYPAD',
             'SEETOUCH_KEYPAD',
+            'INTERNATIONAL_SEETOUCH_KEYPAD'
             'SEETOUCH_TABLETOP_KEYPAD',
             'PICO_KEYPAD',
             'HYBRID_SEETOUCH_KEYPAD',
@@ -354,7 +355,7 @@ class LutronXmlDbParser(object):
     button_type = button_xml.get('ButtonType')
     direction = button_xml.get('Direction')
     # Hybrid keypads have dimmer buttons which have no engravings.
-    if button_type == 'SingleSceneRaiseLower':
+    if button_type == 'SingleSceneRaiseLower' or button_type == 'MasterRaiseLower':
       name = 'Dimmer ' + direction
     if not name:
       name = "Unknown Button"
