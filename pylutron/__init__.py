@@ -1273,7 +1273,7 @@ class OccupancyGroup(LutronEntity):
 
   def __repr__(self):
     """Returns a stringified representation of this object."""
-    return str({'area_name' : self.area.name,
+    return str({'area_name' : self._area.name,
                 'id' : self.id,
                 'state' : self.state})
 
