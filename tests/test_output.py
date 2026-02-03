@@ -24,19 +24,7 @@ class TestOutput(unittest.TestCase):
 
     def test_set_level_executes_command(self):
         self.output.level = 50.0
-        # Expected command: #OUTPUT,1,1,50.00
-        # Wait, the code sends fade time if provided, but default is None?
-        # Let's check the code. Output.set_level sends fade_time_seconds if not None.
-        
-        # Let's verify what is sent.
-        # Lutron.OP_EXECUTE (#) + OUTPUT,1,1,50.00
-        # fade_time is None, so it might not be appended or handled by _fade_time
-        
-        # Looking at implementation:
-        # self._lutron.send(..., "%.2f" % new_level, self._fade_time(fade_time_seconds))
-        # _fade_time returns None if seconds is None.
-        # Lutron.send joins args with comma, filtering None.
-        
+        # Verify that setting the level sends the correct command without fade time
         self.lutron._conn.send.assert_called_with('#OUTPUT,1,1,50.00')
         self.assertEqual(self.output.last_level(), 50.0)
 

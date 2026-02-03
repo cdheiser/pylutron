@@ -82,28 +82,9 @@ class TestRealWorldXml(unittest.TestCase):
         self.assertTrue(parser.parse())
 
         # Check basic hierarchy
-        # parser.areas contains all sub-areas found in the project.
+        # parser.areas contains the sub-areas (rooms) found in the project.
         # In our XML, we have 4 rooms (Bathroom, Hallway, Child Room, Living Room)
         self.assertEqual(len(parser.areas), 4) 
-        
-        # We can't easily check root_area because parser.areas doesn't include it directly?
-        # Actually parser.areas are the children of the top area.
-        # root_area = parser.areas[0]
-        # self.assertEqual(root_area.name, "Test Project") <-- This is wrong. Parser skips the top area container.
-        
-        # Check sub-areas (Bathroom, Hallway, Child Room, Living Room)
-        # Note: XML parser implementation recursively flattens or nests?
-        # Let's check parser.areas.
-        # LutronXmlDbParser._parse_area recursively parses, but typically the "Lutron" object stores a flat list or the parser stores ...
-        # self.areas.append(area) in parse() only for top_level "Areas" -> "Area" children.
-        # Wait, lines 260: for area_xml in areas.iter('Area'): self.areas.append(self._parse_area(area_xml))
-        # The XML structure has <Areas><Area (Project)><Areas><Area (Room)>...</Areas></Area></Areas>
-        # So parser.areas will contain the rooms if "Areas" in line 259 is the inner Areas tag?
-        # Line 257: top_area = root.find('Areas').find('Area') => Project Area
-        # Line 259: areas = top_area.find('Areas') => The <Areas> tag inside Project Area.
-        # So yes, parser.areas will contain the children of the Project area (the rooms).
-        
-        self.assertEqual(len(parser.areas), 4) # Bathroom, Hallway, Child Room, Living Room
         
         # Check specific room details
         bathroom = next(a for a in parser.areas if a.name == "Bathroom")
