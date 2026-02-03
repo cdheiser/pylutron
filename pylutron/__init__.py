@@ -290,7 +290,7 @@ class LutronXmlDbParser(object):
         elif device_group.tag == 'Device':
           devs = [device_group]
         else:
-          _LOGGER.info("Unknown tag in DeviceGroups child %s" % devs)
+          _LOGGER.info("Unknown tag in DeviceGroups child %s" % device_group)
           devs = []
         for device_xml in devs:
           if device_xml.tag != 'Device':
