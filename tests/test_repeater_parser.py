@@ -83,58 +83,59 @@ MINIMAL_XML = """
 </Lutron>
 """
 
+
 class TestLutronXmlDbParser(unittest.TestCase):
     def setUp(self) -> None:
-        self.lutron = Lutron('localhost', 'user', 'pass')
+        self.lutron = Lutron("localhost", "user", "pass")
 
     def test_parse_simple_xml(self) -> None:
         parser = LutronXmlDbParser(self.lutron, MINIMAL_XML)
         self.assertTrue(parser.parse())
-        
+
         # Check Project Info
         # GUID is set on the lutron object
-        self.assertEqual(self.lutron.guid, '12345678-ABCD-1234-ABCD-1234567890AB')
+        self.assertEqual(self.lutron.guid, "12345678-ABCD-1234-ABCD-1234567890AB")
         # Name and areas are stored in the parser until loaded
-        self.assertEqual(parser.project_name, 'Project')
-        
+        self.assertEqual(parser.project_name, "Project")
+
         # Check Areas
         self.assertEqual(len(parser.areas), 1)
         area = parser.areas[0]
-        self.assertEqual(area.name, 'Living Room')
+        self.assertEqual(area.name, "Living Room")
         self.assertEqual(area.id, 1)
 
     def test_parse_outputs(self) -> None:
         parser = LutronXmlDbParser(self.lutron, MINIMAL_XML)
         parser.parse()
         area = parser.areas[0]
-        
+
         self.assertEqual(len(area.outputs), 1)
         output = area.outputs[0]
-        self.assertEqual(output.name, 'Sconce')
+        self.assertEqual(output.name, "Sconce")
         self.assertEqual(output.watts, 100)
-        self.assertEqual(output.type, 'NON_DIM')
+        self.assertEqual(output.type, "NON_DIM")
         self.assertEqual(output.id, 2)
 
     def test_parse_keypad(self) -> None:
         parser = LutronXmlDbParser(self.lutron, MINIMAL_XML)
         parser.parse()
         area = parser.areas[0]
-        
+
         self.assertEqual(len(area.keypads), 1)
         keypad = area.keypads[0]
-        self.assertEqual(keypad.name, 'Main')
-        self.assertEqual(keypad.location, 'Wall Keypad')
-        
+        self.assertEqual(keypad.name, "Main")
+        self.assertEqual(keypad.location, "Wall Keypad")
+
         # Check Buttons
         self.assertEqual(len(keypad.buttons), 1)
         button = keypad.buttons[0]
-        self.assertEqual(button.name, 'On')
+        self.assertEqual(button.name, "On")
         self.assertEqual(button.number, 1)
 
     def test_palladiom_keypad_parsing(self) -> None:
         parser = LutronXmlDbParser(self.lutron, LEGACY_AND_COMPLEX_XML)
         parser.parse()
-        
+
         mbr = next(a for a in parser.areas if a.name == "Master Bedroom")
         keypad = mbr.keypads[0]
         self.assertEqual(keypad.type, "PALLADIOM_KEYPAD")
@@ -143,11 +144,12 @@ class TestLutronXmlDbParser(unittest.TestCase):
     def test_pico_raise_lower_naming(self) -> None:
         parser = LutronXmlDbParser(self.lutron, LEGACY_AND_COMPLEX_XML)
         parser.parse()
-        
+
         kitchen = next(a for a in parser.areas if a.name == "Kitchen")
         pico = kitchen.keypads[0]
         btn = pico.buttons[0]
         self.assertEqual(btn.name, "Dimmer Raise")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

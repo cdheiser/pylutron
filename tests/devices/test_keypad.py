@@ -4,50 +4,57 @@ from pylutron import Lutron, Keypad, Button, Led
 
 from typing import cast
 
+
 class TestKeypad(unittest.TestCase):
     def setUp(self) -> None:
         self.lutron = Lutron("1.1.1.1", "user", "pass")
         # Mock the connection to avoid actual network calls
         self.lutron._conn = MagicMock()
         # Mock the register_id method to avoid errors during object creation if they try to register
-        self.lutron.register_id = MagicMock() # type: ignore[method-assign]
-        
-        self.keypad = Keypad(self.lutron, "Main Keypad", "SEETOUCH_KEYPAD", "Hallway", 100, "uuid-100")
+        self.lutron.register_id = MagicMock()  # type: ignore[method-assign]
+
+        self.keypad = Keypad(
+            self.lutron, "Main Keypad", "SEETOUCH_KEYPAD", "Hallway", 100, "uuid-100"
+        )
 
     def test_button_press(self) -> None:
-        button = Button(self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1")
+        button = Button(
+            self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1"
+        )
         self.keypad.add_button(button)
-        
+
         # Verify that pressing the button sends the correct command
         button.press()
         # Command format: #DEVICE,integration_id,component_num,action
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('#DEVICE,100,1,3')
-        
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("#DEVICE,100,1,3")
+
     def test_led_state_update(self) -> None:
         led = Led(self.lutron, self.keypad, "Led 1", 1, 81, "uuid-led-1")
         self.keypad.add_led(led)
-        
+
         # Verify that setting the LED state sends the correct command
         led.state = Led.LED_ON
-        cast(MagicMock, self.lutron._conn.send).assert_called() 
+        cast(MagicMock, self.lutron._conn.send).assert_called()
         args = cast(MagicMock, self.lutron._conn.send).call_args[0][0]
         self.assertTrue(args.startswith("#DEVICE,100"))
         self.assertEqual(led.last_state, Led.LED_ON)
-        
+
     def test_handle_update(self) -> None:
-        button = Button(self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1")
+        button = Button(
+            self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1"
+        )
         self.keypad.add_button(button)
-        
+
         handler = MagicMock()
         button.subscribe(handler, None)
-        
+
         # Simulate a button press event arriving from the controller
-        self.keypad.handle_update(['1', '3']) # Component 1, Action 3 (Press)
-        
+        self.keypad.handle_update(["1", "3"])  # Component 1, Action 3 (Press)
+
         # Verify that the subscriber was notified with the correct event
         self.assertTrue(handler.called)
         call_args = handler.call_args
-        self.assertEqual(call_args[0][0], button) 
+        self.assertEqual(call_args[0][0], button)
         self.assertEqual(call_args[0][2], Button.Event.PRESSED)
 
     def test_string_representations(self) -> None:
@@ -56,7 +63,9 @@ class TestKeypad(unittest.TestCase):
         self.assertEqual(self.keypad.location, "Hallway")
         self.assertEqual(self.keypad.legacy_uuid, "100-0")
 
-        button = Button(self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1")
+        button = Button(
+            self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1"
+        )
         self.assertIn("Btn 1", str(button))
         self.assertIn("Toggle", repr(button))
         self.assertEqual(button.button_type, "Toggle")

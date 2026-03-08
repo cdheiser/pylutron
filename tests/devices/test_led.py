@@ -4,13 +4,21 @@ from pylutron import Lutron, Keypad, Led
 
 from typing import cast
 
+
 class TestLed(unittest.TestCase):
     def setUp(self) -> None:
         self.lutron = Lutron("1.1.1.1", "user", "pass")
         self.lutron._conn = MagicMock()
-        self.lutron.register_id = MagicMock() # type: ignore[method-assign]
+        self.lutron.register_id = MagicMock()  # type: ignore[method-assign]
         # Create a mock keypad
-        self.keypad = Keypad(self.lutron, "Hallway Keypad", "SEETOUCH_KEYPAD", "Hallway", 100, "uuid-keypad")
+        self.keypad = Keypad(
+            self.lutron,
+            "Hallway Keypad",
+            "SEETOUCH_KEYPAD",
+            "Hallway",
+            100,
+            "uuid-keypad",
+        )
         # Create an LED
         self.led = Led(self.lutron, self.keypad, "Status LED", 1, 81, "uuid-led")
         self.keypad.add_led(self.led)
@@ -22,27 +30,27 @@ class TestLed(unittest.TestCase):
     def test_query_state(self) -> None:
         # Verify that the LED state query sends the correct command to the controller
         self.led._do_query_state()
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('?DEVICE,100,81,9')
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("?DEVICE,100,81,9")
 
     def test_set_state(self) -> None:
         # Verify turning LED On
         self.led.state = Led.LED_ON
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('#DEVICE,100,81,9,1')
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("#DEVICE,100,81,9,1")
         self.assertEqual(self.led.last_state, Led.LED_ON)
-        
+
         # Verify turning LED Off
         self.led.state = Led.LED_OFF
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('#DEVICE,100,81,9,0')
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("#DEVICE,100,81,9,0")
         self.assertEqual(self.led.last_state, Led.LED_OFF)
 
         # Verify Slow Flash
         self.led.state = Led.LED_SLOW_FLASH
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('#DEVICE,100,81,9,2')
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("#DEVICE,100,81,9,2")
         self.assertEqual(self.led.last_state, Led.LED_SLOW_FLASH)
 
         # Verify Fast Flash
         self.led.state = Led.LED_FAST_FLASH
-        cast(MagicMock, self.lutron._conn.send).assert_called_with('#DEVICE,100,81,9,3')
+        cast(MagicMock, self.lutron._conn.send).assert_called_with("#DEVICE,100,81,9,3")
         self.assertEqual(self.led.last_state, Led.LED_FAST_FLASH)
 
     def test_set_state_invalid(self) -> None:
@@ -56,7 +64,7 @@ class TestLed(unittest.TestCase):
         handled = self.led.handle_update(9, [Led.LED_ON])
         self.assertTrue(handled)
         self.assertEqual(self.led.last_state, Led.LED_ON)
-        
+
         # Action 9 (LED_STATE), Params [0] (Off)
         handled = self.led.handle_update(9, [Led.LED_OFF])
         self.assertTrue(handled)
@@ -66,15 +74,16 @@ class TestLed(unittest.TestCase):
         handled = self.led.handle_update(9, [Led.LED_SLOW_FLASH])
         self.assertTrue(handled)
         self.assertEqual(self.led.last_state, Led.LED_SLOW_FLASH)
-        
+
     def test_handle_update_invalid(self) -> None:
         # Wrong action
         handled = self.led.handle_update(99, [1])
         self.assertFalse(handled)
-        
+
         # Missing params
         handled = self.led.handle_update(9, [])
         self.assertFalse(handled)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

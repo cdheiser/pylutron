@@ -17,11 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 
 class OccupancyGroup(LutronEntity):
     """Represents one or more occupancy/vacancy sensors grouped into an Area."""
-    _CMD_TYPE = 'GROUP'
+
+    _CMD_TYPE = "GROUP"
     _ACTION_STATE = 3
 
     class State(Enum):
         """Possible states of an OccupancyGroup."""
+
         UNINITIALIZED = -1
         OCCUPIED = 3
         VACANT = 4
@@ -33,17 +35,18 @@ class OccupancyGroup(LutronEntity):
             Params:
               state: an OccupancyGroup.State
         """
+
         OCCUPANCY = 1
 
-    def __init__(self, lutron: 'Lutron', group_number: str, uuid: str) -> None:
+    def __init__(self, lutron: "Lutron", group_number: str, uuid: str) -> None:
         super(OccupancyGroup, self).__init__(lutron, "", uuid)
-        self._area: Optional['Area'] = None
+        self._area: Optional["Area"] = None
         self._group_number = group_number
         self._integration_id: Optional[int] = None
         self._state = OccupancyGroup.State.UNINITIALIZED
         self._query_waiters = _RequestHelper()
 
-    def _bind_area(self, area: 'Area') -> None:
+    def _bind_area(self, area: "Area") -> None:
         self._area = area
         self._integration_id = area.id
         if self._integration_id != 0:
@@ -57,7 +60,7 @@ class OccupancyGroup(LutronEntity):
     @property
     def legacy_uuid(self) -> str:
         assert self._area is not None
-        return '%s-%s' % (self._area.id, self._group_number)
+        return "%s-%s" % (self._area.id, self._group_number)
 
     @property
     def group_number(self) -> str:
@@ -68,7 +71,7 @@ class OccupancyGroup(LutronEntity):
     def name(self) -> str:
         """Return the name of this OccupancyGroup, which is 'Occ' plus the name of the area."""
         assert self._area is not None
-        return 'Occ {}'.format(self._area.name)
+        return "Occ {}".format(self._area.name)
 
     @property
     def state(self) -> State:
@@ -83,19 +86,22 @@ class OccupancyGroup(LutronEntity):
         """Returns a pretty-printed string for this object."""
         assert self._area is not None
         return 'OccupancyGroup for Area "{}" Id: {} State: {}'.format(
-            self._area.name, self.id, self.state.name)
+            self._area.name, self.id, self.state.name
+        )
 
     def __repr__(self) -> str:
         """Returns a stringified representation of this object."""
         assert self._area is not None
-        return str({'area_name' : self._area.name,
-                    'id' : self.id,
-                    'state' : self.state})
+        return str({"area_name": self._area.name, "id": self.id, "state": self.state})
 
     def _do_query_state(self) -> None:
         """Helper to perform the actual query for the current OccupancyGroup state."""
-        self._lutron.send(OP_QUERY, OccupancyGroup._CMD_TYPE, self._integration_id or 0,
-                                 OccupancyGroup._ACTION_STATE)
+        self._lutron.send(
+            OP_QUERY,
+            OccupancyGroup._CMD_TYPE,
+            self._integration_id or 0,
+            OccupancyGroup._ACTION_STATE,
+        )
 
     def handle_update(self, args: List[str]) -> bool:
         """Handles an event update for this object, e.g. occupancy state change."""
@@ -107,5 +113,7 @@ class OccupancyGroup(LutronEntity):
         except ValueError:
             self._state = OccupancyGroup.State.UNKNOWN
         self._query_waiters.notify()
-        self._dispatch_event(cast(LutronEvent, OccupancyGroup.Event.OCCUPANCY), {'state': self._state})
+        self._dispatch_event(
+            cast(LutronEvent, OccupancyGroup.Event.OCCUPANCY), {"state": self._state}
+        )
         return True

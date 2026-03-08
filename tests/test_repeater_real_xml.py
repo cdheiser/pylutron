@@ -73,9 +73,10 @@ REAL_WORLD_XML = """<?xml version="1.0" encoding="UTF-8" ?>
 </Project>
 """
 
+
 class TestRealWorldXml(unittest.TestCase):
     def setUp(self) -> None:
-        self.lutron = Lutron('localhost', 'user', 'pass')
+        self.lutron = Lutron("localhost", "user", "pass")
 
     def test_parse_real_world_xml(self) -> None:
         parser = LutronXmlDbParser(self.lutron, REAL_WORLD_XML)
@@ -84,22 +85,23 @@ class TestRealWorldXml(unittest.TestCase):
         # Check basic hierarchy
         # parser.areas contains the sub-areas (rooms) found in the project.
         # In our XML, we have 4 rooms (Bathroom, Hallway, Child Room, Living Room)
-        self.assertEqual(len(parser.areas), 4) 
-        
+        self.assertEqual(len(parser.areas), 4)
+
         # Check specific room details
         bathroom = next(a for a in parser.areas if a.name == "Bathroom")
         self.assertEqual(bathroom.id, 92)
         self.assertEqual(len(bathroom.outputs), 2)
-        
+
         child_room = next(a for a in parser.areas if a.name == "Child Room")
         self.assertEqual(len(child_room.keypads), 1)
         pico = child_room.keypads[0]
         self.assertEqual(pico.name, "Pico Remote")
         self.assertEqual(len(pico.buttons), 2)
-        
+
         living_room = next(a for a in parser.areas if a.name == "Living Room")
         hybrid_keypad = living_room.keypads[0]
         self.assertEqual(hybrid_keypad.type, "HYBRID_SEETOUCH_KEYPAD")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

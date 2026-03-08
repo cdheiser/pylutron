@@ -16,7 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 class KeypadComponent(LutronEntity):
     """Base class for a keypad component such as a button, or an LED."""
 
-    def __init__(self, lutron: 'Lutron', keypad: 'Keypad', name: str, num: int, component_num: int, uuid: str) -> None:
+    def __init__(
+        self,
+        lutron: "Lutron",
+        keypad: "Keypad",
+        name: str,
+        num: int,
+        component_num: int,
+        uuid: str,
+    ) -> None:
         """Initializes the base keypad component class."""
         super(KeypadComponent, self).__init__(lutron, name, uuid)
         self._keypad = keypad
@@ -43,18 +51,21 @@ class KeypadComponent(LutronEntity):
 
     @property
     def legacy_uuid(self) -> str:
-        return '%d-%d' % (self._keypad.id, self._component_num)
+        return "%d-%d" % (self._keypad.id, self._component_num)
 
-    def handle_update(self, action: int, params: List[int]) -> bool: # type: ignore[override]
+    def handle_update(self, action: int, params: List[int]) -> bool:  # type: ignore[override]
         """Handle the specified action on this component."""
-        _LOGGER.debug('Keypad: "%s" Handling "%s" Action: %s Params: %s"' % (
-                      self._keypad.name, self.name, action, params))
+        _LOGGER.debug(
+            'Keypad: "%s" Handling "%s" Action: %s Params: %s"'
+            % (self._keypad.name, self.name, action, params)
+        )
         return False
 
 
 class Button(KeypadComponent):
     """This object represents a keypad button that we can trigger and handle
     events for (button presses)."""
+
     _ACTION_PRESS = 3
     _ACTION_RELEASE = 4
     _ACTION_DOUBLE_CLICK = 6
@@ -73,11 +84,21 @@ class Button(KeypadComponent):
                   generate this event.
             Params: None
         """
+
         PRESSED = 1
         RELEASED = 2
         DOUBLE_CLICKED = 3
 
-    def __init__(self, lutron: 'Lutron', keypad: 'Keypad', name: str, num: int, button_type: str, direction: Optional[str], uuid: str) -> None:
+    def __init__(
+        self,
+        lutron: "Lutron",
+        keypad: "Keypad",
+        name: str,
+        num: int,
+        button_type: str,
+        direction: Optional[str],
+        uuid: str,
+    ) -> None:
         """Initializes the Button class."""
         super(Button, self).__init__(lutron, keypad, name, num, num, uuid)
         self._button_type = button_type
@@ -86,12 +107,22 @@ class Button(KeypadComponent):
     def __str__(self) -> str:
         """Pretty printed string value of the Button object."""
         return 'Button name: "%s" num: %d type: "%s" direction: "%s"' % (
-            self.name, self.number, self._button_type, self._direction)
+            self.name,
+            self.number,
+            self._button_type,
+            self._direction,
+        )
 
     def __repr__(self) -> str:
         """String representation of the Button object."""
-        return str({'name': self.name, 'num': self.number,
-                   'type': self._button_type, 'direction': self._direction})
+        return str(
+            {
+                "name": self.name,
+                "num": self.number,
+                "type": self._button_type,
+                "direction": self._direction,
+            }
+        )
 
     @property
     def button_type(self) -> str:
@@ -100,36 +131,55 @@ class Button(KeypadComponent):
 
     def press(self) -> None:
         """Triggers a simulated button press to the Keypad."""
-        self._lutron.send(OP_EXECUTE, Keypad._CMD_TYPE, self._keypad.id,
-                          self.component_number, Button._ACTION_PRESS)
+        self._lutron.send(
+            OP_EXECUTE,
+            Keypad._CMD_TYPE,
+            self._keypad.id,
+            self.component_number,
+            Button._ACTION_PRESS,
+        )
 
     def release(self) -> None:
         """Triggers a simulated button release to the Keypad."""
-        self._lutron.send(OP_EXECUTE, Keypad._CMD_TYPE, self._keypad.id,
-                          self.component_number, Button._ACTION_RELEASE)
+        self._lutron.send(
+            OP_EXECUTE,
+            Keypad._CMD_TYPE,
+            self._keypad.id,
+            self.component_number,
+            Button._ACTION_RELEASE,
+        )
 
     def double_click(self) -> None:
         """Triggers a simulated button double_click to the Keypad."""
-        self._lutron.send(OP_EXECUTE, Keypad._CMD_TYPE, self._keypad.id,
-                          self.component_number, Button._ACTION_DOUBLE_CLICK)
+        self._lutron.send(
+            OP_EXECUTE,
+            Keypad._CMD_TYPE,
+            self._keypad.id,
+            self.component_number,
+            Button._ACTION_DOUBLE_CLICK,
+        )
 
     def tap(self) -> None:
         """Triggers a simulated button tap to the Keypad."""
         self.press()
         self.release()
 
-    def handle_update(self, action: int, params: List[int]) -> bool: # type: ignore[override]
+    def handle_update(self, action: int, params: List[int]) -> bool:  # type: ignore[override]
         """Handle the specified action on this component."""
-        _LOGGER.debug('Keypad: "%s" %s Action: %s Params: %s"' % (
-                      self._keypad.name, self, action, params))
+        _LOGGER.debug(
+            'Keypad: "%s" %s Action: %s Params: %s"'
+            % (self._keypad.name, self, action, params)
+        )
         ev_map = {
             Button._ACTION_PRESS: Button.Event.PRESSED,
             Button._ACTION_RELEASE: Button.Event.RELEASED,
-            Button._ACTION_DOUBLE_CLICK: Button.Event.DOUBLE_CLICKED
+            Button._ACTION_DOUBLE_CLICK: Button.Event.DOUBLE_CLICKED,
         }
         if action not in ev_map:
-            _LOGGER.debug("Unknown action %d for button %d in keypad %s" % (
-                action, self.number, self._keypad.name))
+            _LOGGER.debug(
+                "Unknown action %d for button %d in keypad %s"
+                % (action, self.number, self._keypad.name)
+            )
             return False
         self._dispatch_event(cast(LutronEvent, ev_map[action]), {})
         return True
@@ -138,6 +188,7 @@ class Button(KeypadComponent):
 class Led(KeypadComponent):
     """This object represents a keypad LED that we can turn on/off and
     handle events for (led toggled by scenes)."""
+
     _ACTION_LED_STATE = 9
 
     # LED indicators states
@@ -154,9 +205,18 @@ class Led(KeypadComponent):
               state: The integer value of the new LED state.
               0: Off, 1: On, 2: Slow Flash (1Hz), 3: Fast Flash (10Hz).
         """
+
         STATE_CHANGED = 1
 
-    def __init__(self, lutron: 'Lutron', keypad: 'Keypad', name: str, led_num: int, component_num: int, uuid: str) -> None:
+    def __init__(
+        self,
+        lutron: "Lutron",
+        keypad: "Keypad",
+        name: str,
+        led_num: int,
+        component_num: int,
+        uuid: str,
+    ) -> None:
         """Initializes the Keypad LED class."""
         super(Led, self).__init__(lutron, keypad, name, led_num, component_num, uuid)
         self._state = Led.LED_OFF
@@ -165,17 +225,32 @@ class Led(KeypadComponent):
     def __str__(self) -> str:
         """Pretty printed string value of the Led object."""
         return 'LED keypad: "%s" name: "%s" num: %d component_num: %d"' % (
-            self._keypad.name, self.name, self.number, self.component_number)
+            self._keypad.name,
+            self.name,
+            self.number,
+            self.component_number,
+        )
 
     def __repr__(self) -> str:
         """String representation of the Led object."""
-        return str({'keypad': self._keypad, 'name': self.name,
-                    'num': self.number, 'component_num': self.component_number})
+        return str(
+            {
+                "keypad": self._keypad,
+                "name": self.name,
+                "num": self.number,
+                "component_num": self.component_number,
+            }
+        )
 
     def _do_query_state(self) -> None:
         """Helper to perform the actual query for the current LED state."""
-        self._lutron.send(OP_QUERY, Keypad._CMD_TYPE, self._keypad.id,
-                self.component_number, Led._ACTION_LED_STATE)
+        self._lutron.send(
+            OP_QUERY,
+            Keypad._CMD_TYPE,
+            self._keypad.id,
+            self.component_number,
+            Led._ACTION_LED_STATE,
+        )
 
     @property
     def last_state(self) -> int:
@@ -195,28 +270,44 @@ class Led(KeypadComponent):
 
         new_state: int
         """
-        if new_state not in [Led.LED_OFF, Led.LED_ON, Led.LED_SLOW_FLASH, Led.LED_FAST_FLASH]:
+        if new_state not in [
+            Led.LED_OFF,
+            Led.LED_ON,
+            Led.LED_SLOW_FLASH,
+            Led.LED_FAST_FLASH,
+        ]:
             raise ValueError("Invalid LED state: %s" % new_state)
-        self._lutron.send(OP_EXECUTE, Keypad._CMD_TYPE, self._keypad.id,
-                          self.component_number, Led._ACTION_LED_STATE,
-                          new_state)
+        self._lutron.send(
+            OP_EXECUTE,
+            Keypad._CMD_TYPE,
+            self._keypad.id,
+            self.component_number,
+            Led._ACTION_LED_STATE,
+            new_state,
+        )
         self._state = new_state
 
-    def handle_update(self, action: int, params: List[int]) -> bool: # type: ignore[override]
+    def handle_update(self, action: int, params: List[int]) -> bool:  # type: ignore[override]
         """Handle the specified action on this component."""
-        _LOGGER.debug('Keypad: "%s" %s Action: %s Params: %s"' % (
-                      self._keypad.name, self, action, params))
+        _LOGGER.debug(
+            'Keypad: "%s" %s Action: %s Params: %s"'
+            % (self._keypad.name, self, action, params)
+        )
         if action != Led._ACTION_LED_STATE:
-            _LOGGER.debug("Unknown action %d for led %d in keypad %s" % (
-                action, self.number, self._keypad.name))
+            _LOGGER.debug(
+                "Unknown action %d for led %d in keypad %s"
+                % (action, self.number, self._keypad.name)
+            )
             return False
         elif len(params) < 1:
-            _LOGGER.debug("Unknown params %s (action %d on led %d in keypad %s)" % (
-                params, action, self.number, self._keypad.name))
+            _LOGGER.debug(
+                "Unknown params %s (action %d on led %d in keypad %s)"
+                % (params, action, self.number, self._keypad.name)
+            )
             return False
         self._state = params[0]
         self._query_waiters.notify()
-        self._dispatch_event(Led.Event.STATE_CHANGED, {'state': self._state})
+        self._dispatch_event(Led.Event.STATE_CHANGED, {"state": self._state})
         return True
 
 
@@ -226,9 +317,18 @@ class Keypad(LutronEntity):
     Currently we don't really do much with it except handle the events
     (and drop them on the floor).
     """
-    _CMD_TYPE = 'DEVICE'
 
-    def __init__(self, lutron: 'Lutron', name: str, keypad_type: str, location: str, integration_id: int, uuid: str) -> None:
+    _CMD_TYPE = "DEVICE"
+
+    def __init__(
+        self,
+        lutron: "Lutron",
+        name: str,
+        keypad_type: str,
+        location: str,
+        integration_id: int,
+        uuid: str,
+    ) -> None:
         """Initializes the Keypad object."""
         super(Keypad, self).__init__(lutron, name, uuid)
         self._buttons: List[Button] = []
@@ -258,7 +358,7 @@ class Keypad(LutronEntity):
 
     @property
     def legacy_uuid(self) -> str:
-        return '%d-0' % self.id
+        return "%d-0" % self.id
 
     @property
     def type(self) -> str:
@@ -285,8 +385,10 @@ class Keypad(LutronEntity):
         component = int(args[0])
         action = int(args[1])
         params = [int(x) for x in args[2:]]
-        _LOGGER.debug("Updating %d(%s): c=%d a=%d params=%s" % (
-            self._integration_id, self._name, component, action, params))
+        _LOGGER.debug(
+            "Updating %d(%s): c=%d a=%d params=%s"
+            % (self._integration_id, self._name, component, action, params)
+        )
         if component in self._components:
             return self._components[component].handle_update(action, params)
         return False

@@ -21,7 +21,7 @@ class MotionSensor(LutronEntity):
     use area.occupancy_group.
     """
 
-    _CMD_TYPE = 'DEVICE'
+    _CMD_TYPE = "DEVICE"
 
     _ACTION_BATTERY_STATUS = 22
 
@@ -34,9 +34,12 @@ class MotionSensor(LutronEntity):
         Note that motion events are reported by OccupancyGroup, not individual
         MotionSensors.
         """
+
         STATUS_CHANGED = 1
 
-    def __init__(self, lutron: 'Lutron', name: str, integration_id: int, uuid: str) -> None:
+    def __init__(
+        self, lutron: "Lutron", name: str, integration_id: int, uuid: str
+    ) -> None:
         """Initializes the motion sensor object."""
         super(MotionSensor, self).__init__(lutron, name, uuid)
         self._integration_id = integration_id
@@ -57,14 +60,20 @@ class MotionSensor(LutronEntity):
 
     def __str__(self) -> str:
         """Returns a pretty-printed string for this object."""
-        return 'MotionSensor {} Id: {} Battery: {} Power: {}'.format(
-            self.name, self.id, self.battery_status, self.power_source)
+        return "MotionSensor {} Id: {} Battery: {} Power: {}".format(
+            self.name, self.id, self.battery_status, self.power_source
+        )
 
     def __repr__(self) -> str:
         """String representation of the MotionSensor object."""
-        return str({'motion_sensor_name': self.name, 'id': self.id,
-                    'battery' : self.battery_status,
-                    'power' : self.power_source})
+        return str(
+            {
+                "motion_sensor_name": self.name,
+                "id": self.id,
+                "battery": self.battery_status,
+                "power": self.power_source,
+            }
+        )
 
     @property
     def _update_age(self) -> float:
@@ -93,13 +102,20 @@ class MotionSensor(LutronEntity):
     def _do_query_battery(self) -> None:
         """Helper to perform the query for the current BatteryStatus."""
         component_num = 1  # doesn't seem to matter
-        self._lutron.send(OP_QUERY, MotionSensor._CMD_TYPE, self._integration_id,
-                                 component_num, MotionSensor._ACTION_BATTERY_STATUS)
+        self._lutron.send(
+            OP_QUERY,
+            MotionSensor._CMD_TYPE,
+            self._integration_id,
+            component_num,
+            MotionSensor._ACTION_BATTERY_STATUS,
+        )
 
     def handle_update(self, args: List[str]) -> bool:
         """Handle the specified action on this component."""
         if len(args) != 6:
-            _LOGGER.debug('Wrong number of args for MotionSensor update {}'.format(len(args)))
+            _LOGGER.debug(
+                "Wrong number of args for MotionSensor update {}".format(len(args))
+            )
             return False
         _, action_str, _, power_str, battery_str, _ = args
         action = int(action_str)
@@ -111,5 +127,7 @@ class MotionSensor(LutronEntity):
         self._last_update = time.time()
         self._query_waiters.notify()
         self._dispatch_event(
-            cast(LutronEvent, MotionSensor.Event.STATUS_CHANGED), {'power' : self._power, 'battery': self._battery})
+            cast(LutronEvent, MotionSensor.Event.STATUS_CHANGED),
+            {"power": self._power, "battery": self._battery},
+        )
         return True

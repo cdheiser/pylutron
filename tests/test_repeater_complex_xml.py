@@ -82,50 +82,52 @@ COMPLEX_XML = """<?xml version="1.0" encoding="UTF-8" ?>
 </Project>
 """
 
+
 class TestComplexXml(unittest.TestCase):
     def setUp(self) -> None:
-        self.lutron = Lutron('localhost', 'user', 'pass')
+        self.lutron = Lutron("localhost", "user", "pass")
         self.parser = LutronXmlDbParser(self.lutron, COMPLEX_XML)
         self.assertTrue(self.parser.parse())
 
     def test_main_repeater_parsing(self) -> None:
         # Find Main Repeater
         # It's in 'Crawl Space'
-        crawl_space = next(a for a in self.parser.areas if a.name == 'Crawl Space')
+        crawl_space = next(a for a in self.parser.areas if a.name == "Crawl Space")
         main_repeater = crawl_space.keypads[0]
-        self.assertEqual(main_repeater.type, 'MAIN_REPEATER')
-        self.assertEqual(main_repeater.name, 'Main Repeater')
-        
+        self.assertEqual(main_repeater.type, "MAIN_REPEATER")
+        self.assertEqual(main_repeater.name, "Main Repeater")
+
         # Check components
         # LED on Main Repeater has base 100 (so component 101 -> LED 1)
-        led_1 = next(l for l in main_repeater.leds if l.component_number == 101)
-        self.assertEqual(led_1.number, 1) # 101 - 100
+        led_1 = next(led for led in main_repeater.leds if led.component_number == 101)
+        self.assertEqual(led_1.number, 1)  # 101 - 100
 
     def test_hybrid_keypad_parsing(self) -> None:
-        living_room = next(a for a in self.parser.areas if a.name == 'Living Room')
+        living_room = next(a for a in self.parser.areas if a.name == "Living Room")
         keypad = living_room.keypads[0]
-        self.assertEqual(keypad.type, 'HYBRID_SEETOUCH_KEYPAD')
-        
+        self.assertEqual(keypad.type, "HYBRID_SEETOUCH_KEYPAD")
+
         # Check MasterRaiseLower button
         btn_18 = next(b for b in keypad.buttons if b.component_number == 18)
-        self.assertEqual(btn_18.button_type, 'MasterRaiseLower')
-        self.assertEqual(btn_18.name, 'Dimmer Lower') # Should be auto-generated name
+        self.assertEqual(btn_18.button_type, "MasterRaiseLower")
+        self.assertEqual(btn_18.name, "Dimmer Lower")  # Should be auto-generated name
 
     def test_pico_remote_parsing(self) -> None:
-        child_room = next(a for a in self.parser.areas if a.name == 'Child Room')
+        child_room = next(a for a in self.parser.areas if a.name == "Child Room")
         pico = child_room.keypads[0]
-        self.assertEqual(pico.type, 'PICO_KEYPAD')
-        
+        self.assertEqual(pico.type, "PICO_KEYPAD")
+
         # Check SingleSceneRaiseLower
         # The parser prepends "Dimmer " for these types
-        btn_raise = next(b for b in pico.buttons if b.name == 'Dimmer Raise')
-        self.assertEqual(btn_raise.button_type, 'SingleSceneRaiseLower')
+        btn_raise = next(b for b in pico.buttons if b.name == "Dimmer Raise")
+        self.assertEqual(btn_raise.button_type, "SingleSceneRaiseLower")
 
     def test_occupancy_group_linking(self) -> None:
-        her_closet = next(a for a in self.parser.areas if a.name == 'Her Closet')
+        her_closet = next(a for a in self.parser.areas if a.name == "Her Closet")
         self.assertIsNotNone(her_closet.occupancy_group)
         assert her_closet.occupancy_group is not None
-        self.assertEqual(her_closet.occupancy_group.group_number, '339')
+        self.assertEqual(her_closet.occupancy_group.group_number, "339")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

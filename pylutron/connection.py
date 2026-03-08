@@ -16,17 +16,25 @@ _LOGGER = logging.getLogger(__name__)
 
 class LutronConnection(threading.Thread):
     """Encapsulates the connection to the Lutron controller."""
-    USER_PROMPT = b'login: '
-    PW_PROMPT = b'password: '
-    PROMPT = b'GNET> '
 
-    def __init__(self, host: str, user: str, password: str, recv_callback: Callable[[str], None], connection_factory: Any = telnetlib3.open_connection) -> None:
+    USER_PROMPT = b"login: "
+    PW_PROMPT = b"password: "
+    PROMPT = b"GNET> "
+
+    def __init__(
+        self,
+        host: str,
+        user: str,
+        password: str,
+        recv_callback: Callable[[str], None],
+        connection_factory: Any = telnetlib3.open_connection,
+    ) -> None:
         """Initializes the lutron connection, doesn't actually connect."""
         threading.Thread.__init__(self)
 
         self._host = host
-        self._user = user.encode('ascii')
-        self._password = password.encode('ascii')
+        self._user = user.encode("ascii")
+        self._password = password.encode("ascii")
         self._reader: Optional[telnetlib3.TelnetReader] = None
         self._writer: Optional[telnetlib3.TelnetWriter] = None
         self._connected = False
@@ -67,8 +75,8 @@ class LutronConnection(threading.Thread):
         if self._writer:
             try:
                 if isinstance(cmd, str):
-                    cmd = cmd.encode('ascii')
-                self._writer.write(cmd + b'\r\n')
+                    cmd = cmd.encode("ascii")
+                self._writer.write(cmd + b"\r\n")
                 await self._writer.drain()
             except _EXPECTED_NETWORK_EXCEPTIONS:
                 _LOGGER.exception("Error sending %r", cmd)
@@ -79,15 +87,17 @@ class LutronConnection(threading.Thread):
         """Executes the login procedure (telnet) as well as setting up some
         connection defaults like turning off the prompt, etc."""
         _LOGGER.info("Starting login to %s", self._host)
-        self._reader, self._writer = await self._connection_factory(self._host, 23, connect_timeout=5, encoding=None)
+        self._reader, self._writer = await self._connection_factory(
+            self._host, 23, connect_timeout=5, encoding=None
+        )
 
         # Ensure we know that connection goes away somewhat quickly
         try:
-            sock = self._writer.get_extra_info('socket')
+            sock = self._writer.get_extra_info("socket")
             assert sock is not None
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             # Some operating systems may not include TCP_KEEPIDLE (macOS, variants of Windows)
-            if hasattr(socket, 'TCP_KEEPIDLE'):
+            if hasattr(socket, "TCP_KEEPIDLE"):
                 # Send keepalive probes after 60 seconds of inactivity
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
             # Wait 10 seconds for an ACK
@@ -95,21 +105,25 @@ class LutronConnection(threading.Thread):
             # Send 3 probes before we give up
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
         except OSError:
-            _LOGGER.exception('error configuring socket')
+            _LOGGER.exception("error configuring socket")
 
         assert self._reader is not None
         assert self._writer is not None
 
         await self._reader.readuntil(LutronConnection.USER_PROMPT)
-        self._writer.write(self._user + b'\r\n')
+        self._writer.write(self._user + b"\r\n")
         await self._reader.readuntil(LutronConnection.PW_PROMPT)
-        self._writer.write(self._password + b'\r\n')
-        
+        self._writer.write(self._password + b"\r\n")
+
         # If we get USER_PROMPT again, it means login failed
         try:
-            await asyncio.wait_for(self._reader.readuntil(LutronConnection.PROMPT), timeout=3.0)
+            await asyncio.wait_for(
+                self._reader.readuntil(LutronConnection.PROMPT), timeout=3.0
+            )
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout waiting for GNET prompt, checking if we are back at login")
+            _LOGGER.error(
+                "Timeout waiting for GNET prompt, checking if we are back at login"
+            )
             raise LutronException("Login failed (timeout or invalid credentials)")
 
         await self._send_coro("#MONITORING,12,2")
@@ -151,7 +165,7 @@ class LutronConnection(threading.Thread):
                     if not line:
                         _LOGGER.warning("Connection closed by remote")
                         break
-                    self._recv_cb(line.decode('ascii').rstrip())
+                    self._recv_cb(line.decode("ascii").rstrip())
             except LutronException:
                 _LOGGER.exception("Fatal error during login")
                 # For fatal errors like auth failure, we might want to stop or notify
@@ -161,10 +175,10 @@ class LutronConnection(threading.Thread):
                 _LOGGER.exception("Network exception in main loop")
             except Exception:
                 _LOGGER.exception("Uncaught exception in main loop")
-            
+
             with self._lock:
                 self._disconnect_locked()
-            
+
             if not self._done:
                 # don't spam reconnect
                 await asyncio.sleep(5)

@@ -5,9 +5,9 @@ from enum import Enum
 
 # All Lutron commands start with one of these characters
 # See http://www.lutron.com/TechnicalDocumentLibrary/040249.pdf
-OP_EXECUTE = '#'
-OP_QUERY = '?'
-OP_RESPONSE = '~'
+OP_EXECUTE = "#"
+OP_QUERY = "?"
+OP_RESPONSE = "~"
 
 # We brute force exception handling in a number of areas to ensure
 # connections can be recovered
@@ -20,6 +20,7 @@ _EXPECTED_NETWORK_EXCEPTIONS = (
     socket.timeout,
 )
 
+
 class PowerSource(Enum):
     """Enum values representing power source, reported by queries to
     battery-powered devices."""
@@ -30,12 +31,13 @@ class PowerSource(Enum):
     BATTERY = 1
     EXTERNAL = 2
 
+
 class BatteryStatus(Enum):
     """Enum values representing battery state, reported by queries to
     battery-powered devices."""
 
     # Values from ?HELP,?DEVICE,22 don't match the documentation, using what's in the doc.
-    #?HELP says:
+    # ?HELP says:
     # <0-NOT BATTERY POWERED, 1-DEVICE_BATTERY_STATUS_UNKNOWN, 2-DEVICE_BATTERY_STATUS_GOOD, 3-DEVICE_BATTERY_STATUS_LOW, 4-DEVICE_STATUS_MIA>5-DEVICE_STATUS_NOT_ACTIVATED>
     UNINITIALIZED = -1
     NORMAL = 1

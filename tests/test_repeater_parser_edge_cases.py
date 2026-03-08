@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import MagicMock
 from pylutron import Lutron, LutronXmlDbParser
+
 
 class TestParserEdgeCases(unittest.TestCase):
     def setUp(self) -> None:
-        self.lutron = Lutron('localhost', 'user', 'pass')
+        self.lutron = Lutron("localhost", "user", "pass")
 
     def test_unknown_device_type(self) -> None:
         xml = """
@@ -80,6 +80,7 @@ class TestParserEdgeCases(unittest.TestCase):
         area = parser.areas[0]
         # occupancy_group should be a dummy object with UNINITIALIZED state
         from pylutron import OccupancyGroup
+
         self.assertEqual(area.occupancy_group.state, OccupancyGroup.State.UNINITIALIZED)
         self.assertEqual(area.occupancy_group.group_number, "")
 
@@ -182,5 +183,6 @@ class TestParserEdgeCases(unittest.TestCase):
         self.assertTrue(parser.parse())
         self.assertEqual(len(parser.areas[0].keypads), 0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

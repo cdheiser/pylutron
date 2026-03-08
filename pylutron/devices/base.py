@@ -6,19 +6,25 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from ..repeater import Lutron
 
+
 class LutronEvent(Enum):
     """Base class for the events LutronEntity-derived objects can produce."""
+
     pass
+
 
 # This describes the type signature of the callback that LutronEntity
 # subscribers must provide.
-LutronEventHandler = Callable[['LutronEntity', Any, 'LutronEvent', Dict[str, Any]], None]
+LutronEventHandler = Callable[
+    ["LutronEntity", Any, "LutronEvent", Dict[str, Any]], None
+]
+
 
 class LutronEntity:
     """Base class for all the Lutron objects we'd like to manage. Just holds basic
     common info we'd rather not manage repeatedly."""
 
-    def __init__(self, lutron: 'Lutron', name: str, uuid: str) -> None:
+    def __init__(self, lutron: "Lutron", name: str, uuid: str) -> None:
         """Initializes the base class with common, basic data."""
         self._lutron = lutron
         self._name = name
@@ -49,7 +55,9 @@ class LutronEntity:
         for handler, context in self._subscribers:
             handler(self, context, event, params)
 
-    def subscribe(self, handler: LutronEventHandler, context: Any) -> Callable[[], None]:
+    def subscribe(
+        self, handler: LutronEventHandler, context: Any
+    ) -> Callable[[], None]:
         """Subscribes to events from this entity.
 
         handler: A callable object that takes the following arguments (in order)
