@@ -49,3 +49,19 @@ class TestKeypad(unittest.TestCase):
         call_args = handler.call_args
         self.assertEqual(call_args[0][0], button) 
         self.assertEqual(call_args[0][2], Button.Event.PRESSED)
+
+    def test_string_representations(self) -> None:
+        self.assertIn("Main Keypad", self.keypad.name)
+        self.assertEqual(self.keypad.type, "SEETOUCH_KEYPAD")
+        self.assertEqual(self.keypad.location, "Hallway")
+        self.assertEqual(self.keypad.legacy_uuid, "100-0")
+
+        button = Button(self.lutron, self.keypad, "Btn 1", 1, "Toggle", "Press", "uuid-btn-1")
+        self.assertIn("Btn 1", str(button))
+        self.assertIn("Toggle", repr(button))
+        self.assertEqual(button.button_type, "Toggle")
+
+        led = Led(self.lutron, self.keypad, "Led 1", 1, 81, "uuid-led-1")
+        self.assertIn("Led 1", str(led))
+        self.assertIn("81", repr(led))
+        self.assertEqual(led.last_state, Led.LED_OFF)

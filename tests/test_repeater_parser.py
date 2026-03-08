@@ -1,6 +1,54 @@
 import unittest
 from pylutron import Lutron, LutronXmlDbParser
 
+# Anonymized XML based on the real DbXmlInfo.xml structure
+LEGACY_AND_COMPLEX_XML = """<?xml version="1.0" encoding="UTF-8" ?>
+<Project>
+    <ProjectName ProjectName="Anonymized House" UUID="1" />
+    <GUID>7ccee645777f46459a3d5216b6e54d5a</GUID>
+    <Areas>
+        <Area Name="House" UUID="3" IntegrationID="0" OccupancyGroupAssignedToID="0" SortOrder="0">
+            <Areas>
+                <Area Name="Master Bedroom" UUID="407" IntegrationID="16" OccupancyGroupAssignedToID="409">
+                    <DeviceGroups>
+                        <DeviceGroup Name="Main">
+                            <Devices>
+                                <Device Name="Master Keypad" UUID="7501" IntegrationID="34" DeviceType="PALLADIOM_KEYPAD">
+                                    <Components>
+                                        <Component ComponentNumber="1" ComponentType="BUTTON">
+                                            <Button Engraving="On" ButtonType="Toggle" UUID="B1" />
+                                        </Component>
+                                    </Components>
+                                </Device>
+                            </Devices>
+                        </DeviceGroup>
+                    </DeviceGroups>
+                </Area>
+                <Area Name="Kitchen" UUID="357" IntegrationID="11" OccupancyGroupAssignedToID="359">
+                    <DeviceGroups>
+                        <DeviceGroup Name="Stairs">
+                            <Devices>
+                                <Device Name="Pico" UUID="9555" IntegrationID="28" DeviceType="PICO_KEYPAD">
+                                    <Components>
+                                        <Component ComponentNumber="5" ComponentType="BUTTON">
+                                            <Button Engraving="Raise" ButtonType="SingleSceneRaiseLower" Direction="Raise" UUID="B2" />
+                                        </Component>
+                                    </Components>
+                                </Device>
+                            </Devices>
+                        </DeviceGroup>
+                    </DeviceGroups>
+                </Area>
+            </Areas>
+        </Area>
+    </Areas>
+    <OccupancyGroups>
+        <OccupancyGroup UUID="409" OccupancyGroupNumber="409" />
+        <OccupancyGroup UUID="359" OccupancyGroupNumber="359" />
+    </OccupancyGroups>
+</Project>
+"""
+
 # Minimal XML for testing
 MINIMAL_XML = """
 <Lutron>
@@ -82,6 +130,24 @@ class TestLutronXmlDbParser(unittest.TestCase):
         button = keypad.buttons[0]
         self.assertEqual(button.name, 'On')
         self.assertEqual(button.number, 1)
+
+    def test_palladiom_keypad_parsing(self) -> None:
+        parser = LutronXmlDbParser(self.lutron, LEGACY_AND_COMPLEX_XML)
+        parser.parse()
+        
+        mbr = next(a for a in parser.areas if a.name == "Master Bedroom")
+        keypad = mbr.keypads[0]
+        self.assertEqual(keypad.type, "PALLADIOM_KEYPAD")
+        self.assertEqual(len(keypad.buttons), 1)
+
+    def test_pico_raise_lower_naming(self) -> None:
+        parser = LutronXmlDbParser(self.lutron, LEGACY_AND_COMPLEX_XML)
+        parser.parse()
+        
+        kitchen = next(a for a in parser.areas if a.name == "Kitchen")
+        pico = kitchen.keypads[0]
+        btn = pico.buttons[0]
+        self.assertEqual(btn.name, "Dimmer Raise")
 
 if __name__ == '__main__':
     unittest.main()

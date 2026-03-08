@@ -43,5 +43,40 @@ class TestLutron(unittest.IsolatedAsyncioTestCase):
         
         mock_factory.assert_called_with('host', 23, connect_timeout=5, encoding=None)
 
+    def test_lutron_properties(self) -> None:
+        self.lutron.set_guid("NEW-GUID")
+        self.assertEqual(self.lutron.guid, "NEW-GUID")
+        self.assertEqual(self.lutron.name, "")
+        self.assertEqual(len(self.lutron.areas), 0)
+
+    @patch('urllib.request.urlopen')
+    @patch('builtins.open', new_callable=unittest.mock.mock_open, read_data=b'<Project><GUID>G</GUID><OccupancyGroups/><Areas><Area Name="P" IntegrationID="0"><Areas/></Area></Areas></Project>')
+    def test_load_xml_db_from_cache(self, mock_file: MagicMock, mock_url: MagicMock) -> None:
+        lutron = Lutron('localhost', 'user', 'pass')
+        result = lutron.load_xml_db(cache_path='dummy.xml')
+        self.assertTrue(result)
+        mock_file.assert_called_with('dummy.xml', 'rb')
+        self.assertEqual(lutron.guid, 'G')
+
+    @patch('urllib.request.urlopen')
+    def test_load_xml_db_from_repeater(self, mock_url: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'<Project><GUID>R</GUID><OccupancyGroups/><Areas><Area Name="P" IntegrationID="0"><Areas/></Area></Areas></Project>'
+        mock_response.__enter__.return_value = mock_response
+        mock_url.return_value = mock_response
+
+        lutron = Lutron('localhost', 'user', 'pass')
+        result = lutron.load_xml_db()
+        self.assertTrue(result)
+        mock_url.assert_called()
+        self.assertEqual(lutron.guid, 'R')
+
+    def test_integration_id_exists_error(self) -> None:
+        from pylutron import IntegrationIdExistsError, Output
+        output = Output(self.lutron, "Light", 100, "DIMMER", 10, "uuid-light")
+        # Registering the same ID again should raise
+        with self.assertRaises(IntegrationIdExistsError):
+            self.lutron.register_id(Output._CMD_TYPE, output)
+
 if __name__ == '__main__':
     unittest.main()

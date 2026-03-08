@@ -50,3 +50,16 @@ class TestOccupancy(unittest.TestCase):
         self.assertEqual(call_args[0][0], occ_group)
         self.assertEqual(call_args[0][2], OccupancyGroup.Event.OCCUPANCY)
         self.assertEqual(call_args[0][3]['state'], OccupancyGroup.State.OCCUPIED)
+
+    def test_string_representations(self) -> None:
+        area = MagicMock()
+        area.name = "Room"
+        area.id = 5
+        occ = OccupancyGroup(self.lutron, "100", "uuid-5")
+        occ._bind_area(area)
+        occ.handle_update(['3', '3']) # Set state to OCCUPIED
+        self.assertIn("Room", str(occ))
+        self.assertEqual(occ.legacy_uuid, "5-100")
+        self.assertEqual(occ.group_number, "100")
+        self.assertEqual(occ.name, "Occ Room")
+        self.assertIn("area_name", repr(occ))

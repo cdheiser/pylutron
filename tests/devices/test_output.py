@@ -37,5 +37,21 @@ class TestOutput(unittest.TestCase):
         self.assertTrue(handled)
         self.assertEqual(self.output.last_level(), 75.0)
 
+    def test_output_flash(self) -> None:
+        self.output.flash()
+        cast(MagicMock, self.lutron._conn.send).assert_called_with('#OUTPUT,1,5')
+
+    def test_output_is_dimmable_edge_cases(self) -> None:
+        # Test various non-dimmable types
+        non_dim_types = ['NON_DIM', 'NON_DIM_INC', 'NON_DIM_ELV', 'EXHAUST_FAN_TYPE', 'RELAY_LIGHTING', 'SWITCHED_MOTOR', 'CCO_SOMETHING']
+        for i, t in enumerate(non_dim_types):
+            out = Output(self.lutron, "N", 0, t, 1000 + i, "u")
+            self.assertFalse(out.is_dimmable, f"Type {t} should not be dimmable")
+
+    def test_string_representations(self) -> None:
+        self.assertIn("Ceiling Light", str(self.output))
+        self.assertIn("DIMMER", repr(self.output))
+        self.assertEqual(self.output.legacy_uuid, "1-0")
+
 if __name__ == '__main__':
     unittest.main()
